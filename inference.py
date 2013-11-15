@@ -258,7 +258,7 @@ class ParticleFilter(InferenceModule):
         "*** YOUR CODE HERE ***"
         self.particles = []
         positionQueue = deque(self.legalPositions)
-        for x in range(self.numParticles):
+        for x in xrange(self.numParticles):
             item = positionQueue.popleft()
             self.particles.append(item)
             positionQueue.append(item)
@@ -299,7 +299,7 @@ class ParticleFilter(InferenceModule):
         "*** YOUR CODE HERE ***"
         newParticles = []
         if noisyDistance is None:
-            newParticles = [self.getJailPosition() for x in range(self.numParticles)]
+            newParticles = [self.getJailPosition() for x in xrange(self.numParticles)]
             self.particles = newParticles
         else:
             particleDistribution = util.Counter()
@@ -330,7 +330,12 @@ class ParticleFilter(InferenceModule):
         belief distribution
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        newParticles = []
+        for p in self.particles:
+            oldPos = p
+            newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos))
+            newParticles.append(util.sample(newPosDist))
+        self.particles = newParticles
 
     def getBeliefDistribution(self):
         """
