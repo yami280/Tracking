@@ -18,6 +18,7 @@ import util
 import random
 import busters
 import game
+from collections import deque
 
 class InferenceModule:
     """
@@ -255,6 +256,13 @@ class ParticleFilter(InferenceModule):
             and will produce errors
         """
         "*** YOUR CODE HERE ***"
+        self.particles = []
+        positionQueue = deque(self.legalPositions)
+        for x in range(self.numParticles):
+            item = positionQueue.popleft()
+            self.particles.append(item)
+            positionQueue.append(item)
+
 
     def observe(self, observation, gameState):
         """
@@ -289,7 +297,22 @@ class ParticleFilter(InferenceModule):
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        newParticles = []
+        if noisyDistance is None:
+            newParticles = [self.getJailPosition() for x in range(self.numParticles)]
+            self.particles = newParticles
+        else:
+            particleDistribution = util.Counter()
+            for p in self.particles:
+                trueDistance = util.manhattanDistance(pacmanPosition, p)
+                particleDistribution[p] += emissionModel[trueDistance]
+            if particleDistribution.totalCount() == 0:
+                self.initializeUniformly(gameState)
+            else:
+                particleDistribution.normalize()
+                for p in self.particles:
+                    newParticles.append(util.sample(particleDistribution))
+                self.particles = newParticles
 
     def elapseTime(self, gameState):
         """
@@ -316,7 +339,11 @@ class ParticleFilter(InferenceModule):
           essentially converts a list of particles into a belief distribution (a Counter object)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        beliefs = util.Counter()
+        for p in self.particles:
+            beliefs[p] += 1
+        beliefs.normalize()
+        return beliefs
 
 class MarginalInference(InferenceModule):
     "A wrapper around the JointInference module that returns marginal beliefs about ghosts."
