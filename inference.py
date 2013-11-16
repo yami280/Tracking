@@ -475,8 +475,9 @@ class JointParticleFilter:
         for p in self.particles:
             weight = 1
             for j in xrange(self.numGhosts):
-                trueDistance = util.manhattanDistance(pacmanPosition, p[j])
-                weight = weight * emissionModels[j][trueDistance]
+                if not (noisyDistances[j] is None):
+                    trueDistance = util.manhattanDistance(pacmanPosition, p[j])
+                    weight = weight * emissionModels[j][trueDistance]
             particleDist[p] += weight
         particleDist.normalize()
         if particleDist.totalCount() == 0:
@@ -491,10 +492,12 @@ class JointParticleFilter:
 
     def captureGhosts(self, noisyDistances):
         newParticles = []
-        for i in xrange(self.numGhosts):
-            if noisyDistances[i] is None:
-                for p in self.particles:
-                    newParticles.append(self.getParticleWithGhostInJail(p, i))
+        for p in self.particles:
+            particle = p
+            for i in xrange(self.numGhosts):
+                if noisyDistances[i] is None:
+                    particle = self.getParticleWithGhostInJail(particle, i)
+            newParticles.append(particle)
         self.particles = newParticles
 
     def getParticleWithGhostInJail(self, particle, ghostIndex):
